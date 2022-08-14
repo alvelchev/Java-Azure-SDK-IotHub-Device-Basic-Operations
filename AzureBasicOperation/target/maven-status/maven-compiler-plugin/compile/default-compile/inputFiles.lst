@@ -1,5 +1,6 @@
 /Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/OnPropertyChange.java
 /Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/DeviceTwinStatusCallBack.java
+/Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/RegisterNewDeviceAzureHubRequest.java
 /Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/Constants.java
 /Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/OpenAndUpdateDeviceTwinProperties.java
-/Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/RegisterNewDeviceAzureHub.java
+/Users/alexandervelchev/JavaAzureIotBasicOperations/AzureBasicOperation/src/main/java/org/azure/exampels/GenerateDeviceRegistrationSasToken.java

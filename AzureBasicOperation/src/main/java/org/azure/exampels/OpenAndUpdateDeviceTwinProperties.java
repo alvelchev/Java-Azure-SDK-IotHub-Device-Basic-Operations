@@ -15,8 +15,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
-
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.azure.exampels.Constants.IOT_HUB_NAME;
+import static org.azure.exampels.Constants.SYMMETRICK_KEY_PRIMARY_KEY_ENROLLMENT_GROUP;
+
 public class OpenAndUpdateDeviceTwinProperties {
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -25,18 +27,14 @@ public class OpenAndUpdateDeviceTwinProperties {
     }
 
     public static void initializeDeviceClient1(String deviceId) throws IOException, InterruptedException {
-        String sasToken =
-                generateDeviceTwinUpdateToken1(
-                        //iot hub name where device is
-                        deviceId, "iothub-iomt-iothub-v1-dev-westeurope.azure-devices.net");
+        String sasToken = generateDeviceTwinUpdateToken1(deviceId, IOT_HUB_NAME);
 
         DeviceClient deviceClient = null;
         try {
             deviceClient = new DeviceClient(sasToken, Constants.PROTOCOL);
             deviceClient.open();
             Thread.sleep(2000);
-            deviceClient.startDeviceTwin(
-                    new DeviceTwinStatusCallBack(), null, new OnPropertyChange(), null);
+            deviceClient.startDeviceTwin(new DeviceTwinStatusCallBack(), null, new OnPropertyChange(), null);
             var reportedProperties = new HashMap<String, Object>();
             reportedProperties.put(Constants.ACTIVE, Constants.ACTIVE_VALUE_FALSE);
             Set<Property> properties = getTwinReportedProperties(reportedProperties);
@@ -51,9 +49,7 @@ public class OpenAndUpdateDeviceTwinProperties {
     }
 
     public static String generateDeviceTwinUpdateToken1(String deviceId, String iomtHubEndPoint) {
-        String sasToken =
-                buildAzureSasToken1(
-                        deviceId, composeIotHubUrl1(deviceId, iomtHubEndPoint));
+        String sasToken = buildAzureSasToken1(deviceId, composeIotHubUrl1(deviceId, iomtHubEndPoint));
         return composeDeviceTwinUpdateUrl1(deviceId, sasToken, iomtHubEndPoint);
     }
 
@@ -61,9 +57,8 @@ public class OpenAndUpdateDeviceTwinProperties {
         String token = null;
         try {
             // symmetric key is taken from the primary key of the enrollment group
-            String keyValue = getDeviceKeyValue1(deviceId, "OLCc1142LREdkcFM4hcrJMKplXGe3mw0F2395KfmAXYemroeCatAWqMGEj4Yoe7owEY/vze5mh6iJlz7Q7hfiw==");
-            String targetUrlEncoded =
-                    URLEncoder.encode(azureUrl.toLowerCase(Locale.ENGLISH), UTF_8.name());
+            String keyValue = getDeviceKeyValue1(deviceId, SYMMETRICK_KEY_PRIMARY_KEY_ENROLLMENT_GROUP);
+            String targetUrlEncoded = URLEncoder.encode(azureUrl.toLowerCase(Locale.ENGLISH), UTF_8.name());
             String toSign = targetUrlEncoded + "\n" + getExpiry1();
             token = buildSasToken1(targetUrlEncoded, keyValue, toSign);
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
@@ -90,6 +85,7 @@ public class OpenAndUpdateDeviceTwinProperties {
         byte[] derivedDeviceKey = hmacSignData1(encoded.getBytes(UTF_8), decodedKey);
         return Base64.getEncoder().encodeToString(derivedDeviceKey);
     }
+
     private static void validateSignature1(String encoded, byte[] decodedKey)
             throws NoSuchAlgorithmException {
         boolean isValidSignature =
@@ -98,6 +94,7 @@ public class OpenAndUpdateDeviceTwinProperties {
             throw new NoSuchAlgorithmException("Signature or Key cannot be null or empty");
         }
     }
+
     private static byte[] hmacSignData1(byte[] signature, byte[] base64DecodedKey)
             throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKeySpec secretKey = new SecretKeySpec(base64DecodedKey, Constants.HMAC_ALGORITHM);
@@ -105,6 +102,7 @@ public class OpenAndUpdateDeviceTwinProperties {
         hmacSha256.init(secretKey);
         return hmacSha256.doFinal(signature);
     }
+
     private static Long getExpiry1() {
         return LocalDateTime.now(ZoneOffset.UTC).plusMinutes(5).toEpochSecond(ZoneOffset.UTC);
     }
@@ -132,8 +130,7 @@ public class OpenAndUpdateDeviceTwinProperties {
 
     public static Set<Property> getTwinReportedProperties(Map<String, Object> reportedProperties) {
         Set<Property> twinReportedProperties = new LinkedHashSet<>();
-        reportedProperties.forEach(
-                (key, value) -> twinReportedProperties.add(new Property(key, value)));
+        reportedProperties.forEach((key, value) -> twinReportedProperties.add(new Property(key, value)));
         return twinReportedProperties;
     }
 }

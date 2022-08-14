@@ -1,30 +1,76 @@
 package org.azure.exampels;
 
+import com.google.common.net.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Base64;
+import java.util.Locale;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.azure.exampels.Constants.*;
 
 @Slf4j
-public class RegisterNewDeviceAzureHub {
-    private static final Logger LOG = LoggerFactory.getLogger(RegisterNewDeviceAzureHub.class);
+public class RegisterNewDeviceAzureHubRequest {
+    private static final Logger LOG = LoggerFactory.getLogger(RegisterNewDeviceAzureHubRequest.class);
 
-    public static void main(String[] args) {
+    public static HttpClient httpProxyClient() {
+        return httpClientBuilder().build();
+    }
+
+    private static HttpClient.Builder httpClientBuilder() {
+        return HttpClient.newBuilder();
+    }
+
+
+    public static void main(String[] args) throws IOException, InterruptedException {
         //scopeId is taken from AzureDeviceProvisioningService --> Overview
         //deviceId of the new device
-        var c = generateDeviceRegistrationToken("cXdlX3F3ZV9xX3F3ZQ", "0ne002EE24E");
-        System.out.println(c);
+        var statusCode = registerDevice(DEVICE_ID);
+        System.out.printf("Registration status code: " + statusCode);
+
+    }
+
+    public static int registerDevice(String deviceId) throws IOException, InterruptedException {
+        HttpResponse<String> response =
+                httpProxyClient()
+                        .send(
+                                composeRequestDeviceRegistration(
+                                        deviceId,
+                                        generateDeviceRegistrationToken(
+                                                deviceId, ENROLLMENT_SCOPE_ID)),
+                                HttpResponse.BodyHandlers.ofString());
+        return response.statusCode();
+    }
+
+    private static HttpRequest composeRequestDeviceRegistration(String deviceId, String sasToken) {
+        System.out.println("Device registration sasToken: " + sasToken);
+        return HttpRequest.newBuilder()
+                .uri(
+                        URI.create(
+                                composeDeviceRegistrationUrl(
+                                        deviceId, PROVISIONING_ENDPOINT, ENROLLMENT_SCOPE_ID)))
+                .PUT(HttpRequest.BodyPublishers.ofString(composeRegistrationId(deviceId)))
+                .header(HttpHeaders.AUTHORIZATION, sasToken)
+                .header(HttpHeaders.ACCEPT, "*/*")
+                .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                .header(HttpHeaders.ACCEPT_CHARSET, StandardCharsets.UTF_8.name())
+                .build();
     }
 
     public static String generateDeviceRegistrationToken(String deviceId, String scopeId) {
@@ -32,26 +78,25 @@ public class RegisterNewDeviceAzureHub {
     }
 
     public static String composeDeviceRegistrationUrl(String deviceId, String scopeId) {
-        LOG.info("composeDeviceRegistrationUrl: " + String.format(Constants.REGISTRATION_SCOPE, scopeId, deviceId));
         return String.format(Constants.REGISTRATION_SCOPE, scopeId, deviceId);
+    }
+
+    public static String composeDeviceRegistrationUrl(
+            String deviceId, String provisioningEndPoint, String scopeId) {
+        return String.format(Constants.PROVISIONING_SERVICE_URL, provisioningEndPoint, scopeId, deviceId);
     }
 
     public static String buildAzureSasToken(String deviceId, String azureUrl) {
         // Symmetrick key is the primary key of the enrollment group
         String token = null;
         try {
-            String keyValue =
-                    getDeviceKeyValue1(
-                            deviceId,
-                            "OLCc1142LREdkcFM4hcrJMKplXGe3mw0F2395KfmAXYemroeCatAWqMGEj4Yoe7owEY/vze5mh6iJlz7Q7hfiw==");
-            String targetUrlEncoded =
-                    URLEncoder.encode(azureUrl.toLowerCase(Locale.ENGLISH), UTF_8.name());
+            String keyValue = getDeviceKeyValue1(deviceId, SYMMETRICK_KEY_PRIMARY_KEY_ENROLLMENT_GROUP);
+            String targetUrlEncoded = URLEncoder.encode(azureUrl.toLowerCase(Locale.ENGLISH), UTF_8.name());
             String toSign = targetUrlEncoded + "\n" + getExpiry();
             token = buildSasToken(targetUrlEncoded, keyValue, toSign);
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
             LOG.warn(e.getMessage(), e);
         }
-        LOG.info("buildAzureSasToken1: " + token);
         return token;
     }
 
@@ -59,8 +104,7 @@ public class RegisterNewDeviceAzureHub {
         String token = null;
         try {
             byte[] rawHmac = constructRawHmac(keyValue, toSign);
-            String signature =
-                    URLEncoder.encode(Base64.getEncoder().encodeToString(rawHmac), UTF_8.name());
+            String signature = URLEncoder.encode(Base64.getEncoder().encodeToString(rawHmac), UTF_8.name());
             token = String.format(Constants.SAS_TOKEN_FORMAT, targetUri, signature, getExpiry());
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -95,8 +139,7 @@ public class RegisterNewDeviceAzureHub {
 
     private static void validateSignature(String encoded, byte[] decodedKey)
             throws NoSuchAlgorithmException {
-        boolean isValidSignature =
-                encoded.length() != 0 && decodedKey != null && decodedKey.length != 0;
+        boolean isValidSignature = encoded.length() != 0 && decodedKey != null && decodedKey.length != 0;
         if (!isValidSignature) {
             throw new NoSuchAlgorithmException("Signature or Key cannot be null or empty");
         }
@@ -106,4 +149,7 @@ public class RegisterNewDeviceAzureHub {
         return LocalDateTime.now(ZoneOffset.UTC).plusMinutes(5).toEpochSecond(ZoneOffset.UTC);
     }
 
+    public static String composeRegistrationId(String deviceId) {
+        return String.format("{\r\n" + "  \"registrationId\": \"%s\"\r\n" + "}", deviceId);
+    }
 }

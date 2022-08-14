@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory;
 
 public class DeviceTwinStatusCallBack implements IotHubEventCallback {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DeviceTwinStatusCallBack.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeviceTwinStatusCallBack.class);
 
-  @Override
-  public void execute(IotHubStatusCode status, Object context) {
-    LOG.info("IoT Hub responded to device twin operation");
-  }
+    @Override
+    public void execute(IotHubStatusCode status, Object context) {
+        LOG.info("IoT Hub responded to device twin operation");
+    }
 }

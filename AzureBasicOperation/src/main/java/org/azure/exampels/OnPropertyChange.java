@@ -5,8 +5,8 @@ import com.microsoft.azure.sdk.iot.device.DeviceTwin.TwinPropertyCallBack;
 
 public class OnPropertyChange implements TwinPropertyCallBack {
 
-  @Override
-  public void TwinPropertyCallBack(Property property, Object context) {
-    //Nothing to do here
-  }
+    @Override
+    public void TwinPropertyCallBack(Property property, Object context) {
+        //Nothing to do here
+    }
 }

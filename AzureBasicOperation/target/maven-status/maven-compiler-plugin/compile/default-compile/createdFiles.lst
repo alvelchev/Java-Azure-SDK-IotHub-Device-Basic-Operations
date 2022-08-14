@@ -1,5 +1,6 @@
-org/azure/exampels/RegisterNewDeviceAzureHub.class
+org/azure/exampels/RegisterNewDeviceAzureHubRequest.class
 org/azure/exampels/DeviceTwinStatusCallBack.class
+org/azure/exampels/GenerateDeviceRegistrationSasToken.class
 org/azure/exampels/OnPropertyChange.class
 org/azure/exampels/Constants.class
 org/azure/exampels/OpenAndUpdateDeviceTwinProperties.class
