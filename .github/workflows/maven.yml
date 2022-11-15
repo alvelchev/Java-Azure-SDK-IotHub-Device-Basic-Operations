@@ -13,6 +13,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    
+defaults:
+  run:
+    working-directory: AzureBasicOperation # The working directory path
 
 jobs:
   build:
