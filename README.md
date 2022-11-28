@@ -25,6 +25,7 @@ Here are the expected values:
 | {policyName} | The name of the shared access policy to which this token refers. Absent if the token refers to device-registry credentials. |
 
 
+
 The following code generates a SAS token using the resource URI and signing key. The expiration period is set to one hour from the current time. The next sections detail how to initialize the different inputs for the different token use cases.
 
 ```java
